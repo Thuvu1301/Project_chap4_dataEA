@@ -1,0 +1,52 @@
+---
+title: "Thực hành MANOVA: Dữ liệu nhân viên (DataEA)"
+author:
+  - "Vũ Hà Thư - 25C23004"
+  - "Hà"
+date: "`r format(Sys.Date(), '%d/%m/%Y')`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    number_sections: true
+    df_print: kable
+---
+
+```{r setup, include=FALSE}
+if (!requireNamespace("here", quietly = TRUE)) install.packages("here")
+source(here::here("config", "setup.R"))
+knitr::opts_chunk$set(message = FALSE, warning = FALSE, fig.align = "center")
+```
+
+**Phân công:** Vũ Hà Thư: câu (a)–(e); Hà: câu (f)–(g) và thuyết trình.
+
+# Câu hỏi nghiên cứu và quy ước
+
+- **MANOVA một nhân tố:** Nhóm nhân viên đã nghỉ việc và nhóm đang làm việc có khác nhau khi xét đồng thời 9 đặc điểm về thu nhập – nghề nghiệp, kinh nghiệm làm việc và tâm lý – hành vi hay không?
+- **MANOVA hai nhân tố:** Tình trạng nghỉ việc (`Attrition`) và việc làm thêm giờ (`OverTime`) có ảnh hưởng đến vectơ 4 biến tâm lý – hành vi không, và hai yếu tố này có tương tác với nhau không?
+
+Toàn bài dùng mức ý nghĩa **α = 0.05** (độ tin cậy 95%), trừ khi ghi rõ mức khác.
+
+**Quy ước mức độ vi phạm giả định** (dựa trên p-giá trị của kiểm định giả định): p ≥ 0.05 là **thỏa**; 1e-4 ≤ p < 0.05 là **vi phạm nhẹ**; p < 1e-4 là **vi phạm nặng**.
+
+```{r child=here::here("Part_1_DuLieu_MoHinh", "Part_1_DuLieu_MoHinh.Rmd")}
+```
+
+```{r child=here::here("Part_2_GiaDinh", "Part_2_GiaDinh.Rmd")}
+```
+
+```{r child=here::here("Part_3_MANOVA_1NhanTo", "Part_3_MANOVA_1NhanTo.Rmd")}
+```
+
+```{r child=here::here("Part_4_HauNghiem", "Part_4_HauNghiem.Rmd")}
+```
+
+```{r child=here::here("Part_5_NhanXet", "Part_5_NhanXet.Rmd")}
+```
+
+```{r child=here::here("Part_6_MANOVA_2NhanTo", "Part_6_MANOVA_2NhanTo.Rmd")}
+```
+
+```{r child=here::here("Part_7_HanChe", "Part_7_HanChe.Rmd")}
+```

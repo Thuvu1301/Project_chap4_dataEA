@@ -1,0 +1,24 @@
+<!-- Câu (f) - child document, render qua main.Rmd. Người làm: Hà -->
+
+# Câu (f): MANOVA hai nhân tố (Attrition × OverTime)
+
+```{r f-du-lieu}
+# Dữ liệu sạch từ câu (a)
+ea_f <- read.csv(here::here("data", "processed", "DataEA_clean.csv"))
+ea_f$Attrition <- factor(ea_f$Attrition, levels = c("No", "Yes"))
+ea_f$OverTime  <- factor(ea_f$OverTime,  levels = c("No", "Yes"))
+
+bien_tl <- c("JobSatisfaction", "EnvironmentSatisfaction", "WorkLifeBalance", "JobInvolvement")
+Y_f <- as.matrix(ea_f[, bien_tl])
+o_f <- interaction(ea_f$Attrition, ea_f$OverTime, sep = ".")   # 4 ô
+knitr::kable(table(Attrition = ea_f$Attrition, OverTime = ea_f$OverTime))
+```
+
+<!-- TODO (Hà):
+1. Mô hình X_lkr = mu + tau_l + beta_k + gamma_lk + e_lkr; ba cặp giả thuyết (tương tác, Attrition, OverTime).
+2. Giả định trong từng ô: đã kiểm tra ở câu (b) mục "Hai nhân tố" -> chỉ cần tóm tắt lại.
+3. MANOVA hai nhân tố: car::Manova(lm(Y_f ~ Attrition * OverTime, data = ea_f), test.statistic = "Pillai"). Kiểm định tương tác trước.
+4. Kiểm định vững cho tương tác: hoán vị Freedman–Lane, PERMANOVA (by = "margin") + betadisper, bootstrap trong từng ô.
+5. Từng biến: car::Anova(lm(y ~ Attrition * OverTime), type = 2, white.adjust = "hc3") + Holm.
+6. Nếu có tương tác: ảnh hưởng đơn (Welch t-test so sánh Attrition trong từng mức OverTime) + Holm.
+7. Kết luận câu (f). -->

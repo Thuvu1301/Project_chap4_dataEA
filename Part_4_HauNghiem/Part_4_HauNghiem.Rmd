@@ -1,0 +1,10 @@
+<!-- Câu (d) - child document, render qua main.Rmd. Người làm: Thư -->
+
+# Câu (d): Phân tích hậu nghiệm
+
+<!-- TODO (Thư):
+1. MANOVA riêng cho từng khối biến: thu nhập – nghề nghiệp, kinh nghiệm, tâm lý – hành vi (Pillai + kiểm định vững).
+2. Từng biến: ANOVA một nhân tố (tham khảo) + Welch t-test (tương đương Welch ANOVA khi g = 2), hiệu chỉnh Holm qua 9 biến.
+3. 4 biến Likert và JobLevel: thêm Mann-Whitney để đối chiếu.
+4. Mỗi kiểm định: khối giả thuyết căn giữa + kết luận theo mức ý nghĩa 5%.
+Dùng các đối tượng đã tạo ở Part 1–3: ea, X, nhom, bien, bien_tl, ea_dai. -->

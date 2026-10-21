@@ -1,0 +1,162 @@
+<!-- Câu (a) - child document, render qua main.Rmd -->
+
+# Câu (a): Dữ liệu và mô hình
+
+## Đọc dữ liệu
+
+File `DataEA.xls` có đuôi .xls nhưng nội dung là văn bản phân tách bằng dấu phẩy (CSV, mã hóa UTF-8 có BOM), nên được đọc bằng `read.csv()`.
+
+```{r doc-du-lieu}
+ea_goc <- read.csv(here::here("data", "raw", "DataEA.xls"), fileEncoding = "UTF-8-BOM")
+dim(ea_goc)
+str(ea_goc)
+```
+
+Dữ liệu có 1470 quan sát (mỗi quan sát là một nhân viên) và 35 biến.
+
+## Kiểm tra chất lượng dữ liệu
+
+### Dữ liệu thiếu và dữ liệu lặp
+
+```{r thieu-lap}
+# Số giá trị thiếu (NA hoặc chuỗi rỗng) trên toàn bộ dữ liệu
+sum(is.na(ea_goc))
+sum(ea_goc == "", na.rm = TRUE)
+
+# Số dòng lặp hoàn toàn và số mã nhân viên bị trùng
+sum(duplicated(ea_goc))
+sum(duplicated(ea_goc$EmployeeNumber))
+```
+
+**Nhận xét:** Không có giá trị thiếu hay chuỗi rỗng, không có dòng lặp và mỗi mã nhân viên (`EmployeeNumber`) chỉ xuất hiện một lần, nên mỗi dòng ứng với đúng một nhân viên và không cần loại hay điền khuyết.
+
+### Biến hằng
+
+```{r bien-hang}
+so_gia_tri <- sapply(ea_goc, function(x) length(unique(x)))
+so_gia_tri[so_gia_tri == 1]
+```
+
+**Nhận xét:** `EmployeeCount` (luôn bằng 1), `Over18` (luôn là "Y") và `StandardHours` (luôn bằng 80) không thay đổi giữa các nhân viên, nên không mang thông tin và không dùng trong phân tích.
+
+### Biến phân loại dùng làm nhân tố
+
+```{r nhan-to}
+knitr::kable(table(ea_goc$Attrition), col.names = c("Attrition", "Số nhân viên"))
+knitr::kable(table(ea_goc$OverTime),  col.names = c("OverTime", "Số nhân viên"))
+```
+
+**Nhận xét:** Hai biến chỉ nhận đúng hai giá trị "No"/"Yes", không có giá trị lỗi.
+
+### Miền giá trị và tính nhất quán của 9 biến định lượng
+
+```{r mien-gia-tri}
+bien <- c("MonthlyIncome", "JobLevel",
+          "TotalWorkingYears", "YearsAtCompany", "YearsInCurrentRole",
+          "JobSatisfaction", "EnvironmentSatisfaction", "WorkLifeBalance", "JobInvolvement")
+
+# Giá trị nhỏ nhất, lớn nhất và số mức của từng biến
+data.frame(bien = bien,
+           nho_nhat = sapply(ea_goc[bien], min),
+           lon_nhat = sapply(ea_goc[bien], max),
+           so_muc   = sapply(ea_goc[bien], function(x) length(unique(x))),
+           row.names = NULL)
+
+# Ràng buộc logic giữa các biến về thời gian (số dòng vi phạm)
+data.frame(
+  rang_buoc = c("YearsInCurrentRole <= YearsAtCompany",
+                "YearsAtCompany <= TotalWorkingYears",
+                "TotalWorkingYears < Age"),
+  so_dong_vi_pham = c(sum(ea_goc$YearsInCurrentRole > ea_goc$YearsAtCompany),
+                      sum(ea_goc$YearsAtCompany > ea_goc$TotalWorkingYears),
+                      sum(ea_goc$TotalWorkingYears >= ea_goc$Age))
+)
+```
+
+**Nhận xét:**
+
+- 4 biến tâm lý – hành vi chỉ nhận các giá trị 1–4 và `JobLevel` nhận 1–5, đúng với thang đo; `MonthlyIncome` và 3 biến số năm đều không âm.
+- Không có dòng nào vi phạm ràng buộc logic: số năm ở vị trí hiện tại không vượt số năm tại công ty, số năm tại công ty không vượt tổng số năm làm việc, và tổng số năm làm việc nhỏ hơn tuổi.
+- `JobLevel` và 4 biến tâm lý – hành vi (5 biến) là **biến thứ bậc** có ít mức (4–5 mức), được xử lý như biến định lượng theo yêu cầu của đề.
+
+### Giá trị ngoại lai từng biến
+
+Ngoại lai một chiều được xác định theo quy tắc boxplot của Tukey (*Exploratory Data Analysis*, 1977): giá trị nằm ngoài khoảng $[Q_1 - 1.5\,IQR;\ Q_3 + 1.5\,IQR]$, với $IQR = Q_3 - Q_1$.
+
+```{r ngoai-lai-1-chieu}
+ngoai_lai_1c <- function(x) {
+  q <- quantile(x, c(0.25, 0.75)); iqr <- q[2] - q[1]
+  x < q[1] - 1.5 * iqr | x > q[2] + 1.5 * iqr
+}
+data.frame(bien = bien,
+           so_ngoai_lai = sapply(ea_goc[bien], function(x) sum(ngoai_lai_1c(x))),
+           ty_le_pct    = round(sapply(ea_goc[bien], function(x) mean(ngoai_lai_1c(x))) * 100, 1),
+           do_lech      = round(sapply(ea_goc[bien], function(x) mean((x - mean(x))^3) / sd(x)^3), 2),
+           row.names = NULL)
+```
+
+**Nhận xét:** `MonthlyIncome` (114 giá trị, 7.8%), `YearsAtCompany` (104, 7.1%), `TotalWorkingYears` (63, 4.3%) và `YearsInCurrentRole` (21, 1.4%) có giá trị nằm ngoài khoảng trên, do các biến này lệch phải (hệ số bất đối xứng 0.92–1.76). Các giá trị này nằm trong miền hợp lệ (lương tối đa 19999, số năm tối đa 40, không vi phạm ràng buộc logic) và ứng với nhóm nhân viên có thu nhập hoặc thâm niên cao, nên được **giữ nguyên**: MANOVA so sánh vectơ trung bình, việc loại hay cắt (winsorize) các giá trị này sẽ làm thay đổi chính các trung bình cần so sánh. 5 biến thứ bậc không có ngoại lai. Ngoại lai nhiều chiều được xét ở câu (b).
+
+## Dữ liệu sau xử lý
+
+```{r du-lieu-sach}
+ea <- ea_goc[, c("EmployeeNumber", "Attrition", "OverTime", bien)]
+ea$Attrition <- factor(ea$Attrition, levels = c("No", "Yes"))
+ea$OverTime  <- factor(ea$OverTime,  levels = c("No", "Yes"))
+
+# Ma trận dữ liệu cho MANOVA một nhân tố (9 biến) và hai nhân tố (4 biến tâm lý – hành vi)
+X <- as.matrix(ea[, bien])
+bien_tl <- c("JobSatisfaction", "EnvironmentSatisfaction", "WorkLifeBalance", "JobInvolvement")
+Y <- as.matrix(ea[, bien_tl])
+
+nhom <- ea$Attrition
+X1 <- X[nhom == "No", ]    # nhân viên đang làm việc
+X2 <- X[nhom == "Yes", ]   # nhân viên đã nghỉ việc
+n  <- nrow(X); p <- ncol(X); g <- 2
+n1 <- nrow(X1); n2 <- nrow(X2)
+knitr::kable(t(c(n = n, p = p, n1 = n1, n2 = n2)))
+
+# 4 ô của mô hình hai nhân tố
+o <- interaction(ea$Attrition, ea$OverTime, sep = ".")
+knitr::kable(table(Attrition = ea$Attrition, OverTime = ea$OverTime))
+
+# Lưu dữ liệu sạch dùng chung cho các câu sau
+write.csv(ea, here::here("data", "processed", "DataEA_clean.csv"), row.names = FALSE)
+```
+
+Dữ liệu sạch gồm 1470 nhân viên, 2 nhân tố và 9 biến định lượng, được lưu tại `data/processed/DataEA_clean.csv` để dùng chung cho các câu sau. Cỡ mẫu **không cân bằng**: 1233 nhân viên đang làm việc và 237 nhân viên đã nghỉ việc; 4 ô Attrition × OverTime có cỡ mẫu: (No, No) = 944, (No, Yes) = 289, (Yes, No) = 110, (Yes, Yes) = 127. Trong các bảng sau, mỗi ô được ký hiệu `Attrition.OverTime`, ví dụ `Yes.No` là nhân viên đã nghỉ việc và không làm thêm giờ.
+
+## Mô hình phân tích
+
+**Mô hình:** MANOVA một nhân tố với g = 2 tổng thể (Johnson & Wichern, mục 6.4). Với hai tổng thể, MANOVA một nhân tố tương đương kiểm định Hotelling $T^2$ so sánh hai vectơ trung bình (Johnson & Wichern, mục 6.3).
+
+- **Biến độc lập (nhân tố):** `Attrition`, 2 mức: No (đang làm việc, $\ell = 1$), Yes (đã nghỉ việc, $\ell = 2$).
+- **Vectơ biến phụ thuộc** (p = 9):
+
+$$
+\mathbf X = \big(\underbrace{\text{MonthlyIncome},\ \text{JobLevel}}_{\text{thu nhập – nghề nghiệp}},\ \underbrace{\text{TotalWorkingYears},\ \text{YearsAtCompany},\ \text{YearsInCurrentRole}}_{\text{kinh nghiệm}},\ \underbrace{\text{JobSatisfaction},\ \text{EnvironmentSatisfaction},\ \text{WorkLifeBalance},\ \text{JobInvolvement}}_{\text{tâm lý – hành vi}}\big)'
+$$
+
+- **Mô hình:** $\mathbf X_{\ell j} = \boldsymbol\mu + \boldsymbol\tau_\ell + \mathbf e_{\ell j}$, $j = 1, \dots, n_\ell$, $\ell = 1, 2$, với $n_1\boldsymbol\tau_1 + n_2\boldsymbol\tau_2 = \mathbf 0$ và $\mathbf e_{\ell j} \sim N_9(\mathbf 0, \boldsymbol\Sigma)$ độc lập.
+
+**Giả thuyết kiểm định tổng thể:**
+
+$$
+\begin{aligned}
+H_0 &: \boldsymbol\mu_1 = \boldsymbol\mu_2 \\
+H_A &: \boldsymbol\mu_1 \neq \boldsymbol\mu_2
+\end{aligned}
+$$
+
+hay tương đương
+
+$$
+\begin{aligned}
+H_0 &: \boldsymbol\tau_1 = \boldsymbol\tau_2 = \mathbf 0 \\
+H_A &: \text{tồn tại } \boldsymbol\tau_\ell \neq \mathbf 0
+\end{aligned}
+$$
+
+trong đó $\boldsymbol\mu_1$, $\boldsymbol\mu_2$ là vectơ trung bình của 9 biến ở nhóm đang làm việc và nhóm đã nghỉ việc.
+
+**Các giả định của MANOVA** (Johnson & Wichern, mục 6.4): (1) các mẫu độc lập với nhau và các quan sát trong mỗi mẫu độc lập; (2) mỗi tổng thể có phân phối chuẩn nhiều chiều; (3) các tổng thể có cùng ma trận hiệp phương sai $\boldsymbol\Sigma_1 = \boldsymbol\Sigma_2$. Giả định (1) được đảm bảo theo cách thu thập dữ liệu (mỗi dòng là một nhân viên khác nhau); giả định (2) và (3) được kiểm tra ở câu (b).

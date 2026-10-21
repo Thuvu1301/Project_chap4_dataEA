@@ -1,0 +1,14 @@
+# File sinh ra khi knit
+*_files/
+*_cache/
+*.log
+*.tex
+
+# R
+.Rhistory
+.RData
+.Rproj.user/
+
+# macOS
+.DS_Store
+.claude

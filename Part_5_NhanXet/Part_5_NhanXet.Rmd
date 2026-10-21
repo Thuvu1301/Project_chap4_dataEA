@@ -1,0 +1,7 @@
+<!-- Câu (e) - child document, render qua main.Rmd. Người làm: Thư (số liệu), Hà (ý nghĩa quản trị nhân sự) -->
+
+# Câu (e): Nhận xét và ý nghĩa thực tiễn
+
+<!-- TODO:
+- Tóm tắt khác biệt giữa hai nhóm theo từng khối biến, kèm độ lớn chênh lệch (lấy số từ câu c, d).
+- Ý nghĩa đối với quản trị nhân sự: lương và cấp bậc, nhân viên mới / thâm niên thấp, mức hài lòng và cân bằng công việc – cuộc sống. -->

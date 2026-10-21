@@ -1,0 +1,10 @@
+<!-- Câu (g) - child document, render qua main.Rmd. Người làm: Hà -->
+
+# Câu (g): Hạn chế của MANOVA và phương pháp thay thế
+
+<!-- TODO (Hà):
+- Hạn chế: 5 biến thứ bậc 4–5 mức không chuẩn; hai nhóm lệch (1233/237); Box's M với p = 9 > 5;
+  đa cộng tuyến MonthlyIncome – JobLevel; 4 biến tâm lý gần như không tương quan;
+  MANOVA chỉ kiểm định khác biệt trung bình, không dự báo được ai nghỉ việc.
+- Phương pháp thay thế: PERMANOVA / MANOVA trên hạng; hồi quy logistic với Attrition là biến phụ thuộc;
+  hồi quy thứ bậc cho các biến Likert. -->
